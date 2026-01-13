@@ -46,4 +46,5 @@ resource "aws_key_pair" "awsuser" {
   key_name = "awsuser"
   # Make sure that you have the public key in your ~/.ssh/id_rsa.pub
   public_key = file("~/.ssh/id_rsa.pub")
+  tags       = local.tags
 }
