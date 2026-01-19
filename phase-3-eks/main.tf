@@ -23,6 +23,21 @@ module "vpc" {
   tags            = local.tags
 }
 
+locals {
+  ebs_csi_service_account_namespace = "kube-system"
+  ebs_csi_service_account_name      = "ebs-csi-controller-sa"
+}
+
+module "ebs_csi_irsa_role" {
+  source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version                       = "5.11.1"
+  create_role                   = true
+  role_name                     = "eks-cluster-ebs-csi-controller"
+  provider_url                  = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
+  role_policy_arns              = ["arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:${local.ebs_csi_service_account_namespace}:${local.ebs_csi_service_account_name}"]
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "21.14.0"
@@ -33,7 +48,7 @@ module "eks" {
   control_plane_subnet_ids     = module.vpc.private_subnets
   subnet_ids                   = module.vpc.private_subnets
   create_cloudwatch_log_group  = false
-  enable_irsa                  = false
+  enable_irsa                  = true
   vpc_id                       = module.vpc.vpc_id
   endpoint_private_access      = true
   endpoint_public_access       = true
@@ -57,6 +72,12 @@ module "eks" {
   addons = {
     vpc-cni = {
       before_compute = true # Make sure VPC CNI is installed before compute nodes are created. Otherwise node health status will fail
+    }
+    aws-ebs-csi-driver = {
+      service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+      most_recent              = true
+    }
+    coredns = {
     }
     # kube-proxy = {} # for pods to get IP addresses from the VPC
   }
