@@ -25,6 +25,7 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         runAsNonRoot: true
+        fsGroup: 1000
       volumes:
       - name: n8n-pvc
         persistentVolumeClaim:

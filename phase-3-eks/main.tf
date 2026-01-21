@@ -75,11 +75,9 @@ module "eks" {
     }
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
-      most_recent              = true
     }
-    coredns = {
-    }
-    # kube-proxy = {} # for pods to get IP addresses from the VPC
+    #coredns    = {}
+    kube-proxy = {}
   }
 
   eks_managed_node_groups = {
@@ -90,6 +88,9 @@ module "eks" {
       min_size     = 1
       max_size     = 2
       desired_size = 1
+      iam_role_additional_policies = {
+        ebs_csi_driver = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
     }
   }
 
