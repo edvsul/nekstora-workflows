@@ -10,7 +10,7 @@
 
 ## Setup Instructions
 
-To create infrastructure in the phase-3-eks folder, run the following commands:
+To create infrastructure in the phase-2-module folder, run the following commands:
 
 ```bash
 
