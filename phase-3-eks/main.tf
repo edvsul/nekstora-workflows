@@ -56,7 +56,7 @@ module "eks" {
 
   access_entries = {
     sso_admin = {
-      principal_arn = var.iam_role_arn # The placeholder for your IAM role ARN to run kubectl commands
+      principal_arn = var.iam_role_arn # The placeholder for your IAM role ARN to run kubectl commands. Set with TF_VAR_iam_role_arn
       type          = "STANDARD"
       policy_associations = {
         cluster_admin = {
@@ -93,6 +93,80 @@ module "eks" {
       }
     }
   }
+
+  tags = local.tags
+}
+
+module "rds" {
+  source  = "terraform-aws-modules/rds/aws"
+  version = "~> 7.0"
+
+  identifier = "psql-rds"
+
+  engine               = "postgres"
+  engine_version       = "17.4"
+  family               = "postgres17"
+  major_engine_version = "17"
+  instance_class       = "db.t3.micro"
+
+  allocated_storage     = 32
+  max_allocated_storage = 100
+  storage_type          = "gp2"
+  storage_encrypted     = true
+
+  db_name                     = "customerdb"
+  username                    = "psqladmin"
+  manage_master_user_password = false
+  password_wo                 = "n8n-password"
+  password_wo_version         = "1"
+  create_db_subnet_group      = true
+  db_subnet_group_name        = "psql-subnet-group"
+  vpc_security_group_ids      = [module.rds_security_group.security_group_id]
+  subnet_ids                  = module.vpc.private_subnets
+
+  backup_retention_period = 7
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "sun:04:00-sun:05:00"
+
+  deletion_protection = false
+  skip_final_snapshot = true
+  parameters = [
+    {
+      name  = "rds.force_ssl" # Disable SSL
+      value = "0"
+    }
+  ]
+
+  tags = local.tags
+}
+
+module "rds_security_group" {
+  source  = "terraform-aws-modules/security-group/aws"
+  version = "~> 5.0"
+
+  name        = "psql-rds-sg"
+  description = "Security group for RDS PostgreSQL"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 5432
+      to_port     = 5432
+      protocol    = "tcp"
+      description = "PostgreSQL access from VPC"
+      cidr_blocks = module.vpc.vpc_cidr_block
+    }
+  ]
+
+  egress_with_cidr_blocks = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      description = "All outbound traffic"
+      cidr_blocks = "0.0.0.0/0"
+    }
+  ]
 
   tags = local.tags
 }
