@@ -9,5 +9,5 @@ terraform {
 }
 
 provider "aws" {
-  profile = "tgtg-playground-edvinas"
+  profile = "tgtg-playground-edvinas" # Replace it with your profile!
 }
