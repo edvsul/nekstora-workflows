@@ -34,6 +34,7 @@ spec:
           readOnly: true
         securityContext:
           allowPrivilegeEscalation: false
+      serviceAccountName: n8n-sa
       volumes:
       - name: n8n-pvc
         persistentVolumeClaim:

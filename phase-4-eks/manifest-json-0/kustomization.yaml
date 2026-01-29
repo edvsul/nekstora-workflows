@@ -8,3 +8,4 @@ resources:
   - pvc.yaml
   - secrets.yaml
   - service.yaml
+  - serviceaccount.yaml

@@ -26,8 +26,8 @@ module "vpc" {
 locals {
   ebs_csi_service_account_namespace         = "kube-system"
   ebs_csi_service_account_name              = "ebs-csi-controller-sa"
-  secrets_manager_service_account_namespace = "kube-system" # Namespace where n8n will run
-  secrets_manager_service_account_name      = "secrets-manager-controller-sa"
+  secrets_manager_service_account_namespace = "n8n" # Namespace where n8n will run
+  secrets_manager_service_account_name      = "n8n-sa"
 }
 
 module "ebs_csi_irsa_role" {
@@ -88,9 +88,17 @@ module "eks" {
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
     }
-    coredns                               = {}
-    kube-proxy                            = {}
-    aws-secrets-store-csi-driver-provider = {}
+    coredns    = {}
+    kube-proxy = {}
+    aws-secrets-store-csi-driver-provider = {
+      configuration_values = jsonencode({
+        "secrets-store-csi-driver" = {
+          "syncSecret" = {
+            "enabled" = true
+          }
+        }
+      })
+    }
   }
 
   eks_managed_node_groups = {
