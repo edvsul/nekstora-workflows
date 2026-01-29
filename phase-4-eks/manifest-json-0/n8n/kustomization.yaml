@@ -9,3 +9,4 @@ resources:
   - secrets.yaml
   - service.yaml
   - serviceaccount.yaml
+  - ingress.yaml
